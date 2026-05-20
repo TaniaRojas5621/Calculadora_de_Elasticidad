@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de dispersion de Rutherford</title>
+  <style>
+:root {
+  color-scheme: light;
+  --bg: #ffffff;
+  --panel: #f7f9fb;
+  --panel-2: #eef1f5;
+  --text: #1a2230;
+  --muted: #5a6a7a;
+  --line: #d0d8e2;
+  --cyan: #33d6c7;
+  --gold: #f4be4f;
+  --red: #ff6f61;
+  --green: #2a9d3e;
+  --green-hover: #238534;
+  --green-light: #e8f5ec;
+  --green-text: #1a6b2c;
+  --sim-bg: #ffffff;
+  --sim-panel: #f7f9fb;
+  --sim-panel-2: #eef1f5;
+  --sim-text: #1a2230;
+  --sim-muted: #5a6a7a;
+  --sim-line: #d0d8e2;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #ffffff;
+  color: var(--text);
+}
+
+.hidden {
+  display: none !important;
+}
+
+button, input {
+  font: inherit;
+}
+
+/* ── INFO PAGE ── */
+.info-page {
+  min-height: 100vh;
+  background: #ffffff;
+}
+
+.info-hero {
+  text-align: center;
+  padding: 72px 24px 56px;
+  background: linear-gradient(160deg, #f0fdf4 0%, #ffffff 60%);
+  border-bottom: 1px solid #d8ead0;
+}
+
+.info-hero .eyebrow {
+  display: inline-block;
+  margin: 0 0 16px;
+  color: var(--green);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background: var(--green-light);
+  padding: 4px 14px;
+  border-radius: 20px;
+}
+
+.info-hero h1 {
+  margin: 0 0 18px;
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  line-height: 1.1;
+  color: #111;
+}
+
+.info-subtitle {
+  max-width: 560px;
+  margin: 0 auto 36px;
+  color: #4a5a6a;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.btn-primary {
+  display: inline-block;
+  padding: 14px 32px;
+  background: var(--green);
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+
+.btn-primary:hover {
+  background: var(--green-hover);
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  max-width: 1100px;
+  margin: 48px auto;
+  padding: 0 24px;
+}
+
+.info-card {
+  background: #f7faf8;
+  border: 1px solid #d0e8d8;
+  border-radius: 10px;
+  padding: 28px 24px;
+}
+
+.info-card-icon {
+  font-size: 1.8rem;
+  margin-bottom: 14px;
+  color: var(--green);
+}
+
+.info-card h3 {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+  color: #111;
+}
+
+.info-card p {
+  margin: 0;
+  color: #4a5a6a;
+  font-size: 0.93rem;
+  line-height: 1.6;
+}
+
+.info-footer {
+  text-align: center;
+  padding: 24px;
+  border-top: 1px solid #e0e8e2;
+  color: #7a8a96;
+  font-size: 0.85rem;
+}
+
+/* ── SIMULATOR NAV ── */
+.sim-topnav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.btn-back {
+  padding: 7px 14px;
+  background: var(--green);
+  color: #ffffff;
+  border: 1px solid var(--green);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btn-back:hover {
+  background: var(--green-hover);
+  border-color: var(--green-hover);
+  color: #ffffff;
+}
+
+.sim-nav-title {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* ── SIMULATOR LAYOUT ── */
+#simulatorPage {
+  background: #ffffff;
+}
+
+.app {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 24px 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 18px;
+}
+
+.stage,
+.panel,
+.explain {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+}
+
+.stage {
+  min-width: 0;
+}
+
+.topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--green);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+h1, h2, p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 0;
+  font-size: clamp(1.7rem, 3vw, 3rem);
+  line-height: 1.03;
+  color: var(--text);
+}
+
+.subtitle {
+  max-width: 680px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+h2 {
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+  color: var(--text);
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: max-content;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #8be071;
+  box-shadow: 0 0 16px #8be071;
+}
+
+.dot.paused {
+  background: var(--red);
+  box-shadow: 0 0 16px var(--red);
+}
+
+.canvasShell {
+  position: relative;
+  margin: 0 22px 22px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: #080b0f;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+
+.legend {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: #d7dee5;
+  font-size: 0.84rem;
+  pointer-events: none;
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: rgba(8, 11, 15, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.legend i {
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  border-radius: 50%;
+}
+
+.legend .alpha { background: var(--cyan); }
+.legend .nucleus { background: var(--red); }
+.legend .foil {
+  width: 4px;
+  border-radius: 1px;
+  background: var(--gold);
+}
+
+.panel {
+  padding: 18px;
+}
+
+.panelHeader,
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* Botones del simulador en verde */
+.panel button,
+.stageControl button {
+  min-height: 38px;
+  border: 1px solid var(--green);
+  background: var(--green);
+  color: #ffffff;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: 600;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.panel button:hover,
+.stageControl button:hover {
+  background: var(--green-hover);
+  border-color: var(--green-hover);
+}
+
+.control {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 12px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+
+.stageControl {
+  margin: -8px 22px 22px;
+  padding: 14px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+}
+
+.control span {
+  color: var(--muted);
+}
+
+output {
+  color: var(--text);
+  font-weight: 700;
+}
+
+input[type="range"] {
+  grid-column: 1 / -1;
+  width: 100%;
+  accent-color: var(--green);
+}
+
+.actions {
+  margin: 12px 0 16px;
+}
+
+.actions button {
+  flex: 1;
+}
+
+.bookNotes {
+  margin: 16px 0;
+  padding: 14px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+}
+
+.bookNotes h2 {
+  margin-bottom: 10px;
+}
+
+.bookNotes ul {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--muted);
+  line-height: 1.35;
+  font-size: 0.9rem;
+}
+
+.bookNotes li + li {
+  margin-top: 7px;
+}
+
+.metrics {
+  display: grid;
+  gap: 10px;
+}
+
+.metrics article {
+  padding: 12px;
+  background: var(--green-light);
+  border-left: 3px solid var(--green);
+}
+
+.metrics strong {
+  display: block;
+  font-size: 1.55rem;
+  color: var(--text);
+}
+
+.metrics span {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.explain {
+  grid-column: 1 / -1;
+  padding: 18px 22px;
+}
+
+.explain p {
+  max-width: 920px;
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+@media (max-width: 860px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+  .topbar,
+  .panelHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .status {
+    min-width: 0;
+  }
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+</style>
+</head>
+<body>
+
+  <!-- PAGINA DE INFORMACION DEL PROYECTO -->
+  <div id="infoPage" class="info-page">
+    <div class="info-hero">
+      <span class="eyebrow">Fisica Atomica</span>
+      <h1>Experimento de<br>Dispersion de Rutherford</h1>
+      <p class="info-subtitle">
+        Un simulador interactivo del experimento clasico de 1909 que revoluciono nuestra comprension de la estructura atomica.
+      </p>
+      <button class="btn-primary" onclick="showSimulator()">
+        Abrir Simulador &rarr;
+      </button>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-card-icon">&#9883;</div>
+        <h3>El experimento</h3>
+        <p>
+          Ernest Rutherford, Hans Geiger y Ernest Marsden dirigieron particulas alfa a alta velocidad contra una lamina delgada de oro. Detras colocaron una pantalla detectora para registrar los impactos.
+        </p>
+      </div>
+      <div class="info-card">
+        <div class="info-card-icon">&#9888;</div>
+        <h3>El resultado inesperado</h3>
+        <p>
+          La mayoria de las particulas atravesaron la lamina sin desviarse. Sin embargo, una pequeña fraccion reboto hacia atras, algo completamente inesperado segun el modelo atomico de Thomson vigente en esa epoca.
+        </p>
+      </div>
+      <div class="info-card">
+        <div class="info-card-icon">&#9670;</div>
+        <h3>La conclusion</h3>
+        <p>
+          Rutherford concluyo que el atomo tiene un nucleo pequeno, denso y con carga positiva. La mayor parte del atomo es espacio vacio, lo que explica por que casi todas las particulas lo atraviesan.
+        </p>
+      </div>
+      <div class="info-card">
+        <div class="info-card-icon">&#9654;</div>
+        <h3>Sobre este simulador</h3>
+        <p>
+          Permite ajustar la carga nuclear Z, la energia de las particulas alfa, la apertura del haz y la intensidad. Los datos estadisticos se actualizan en tiempo real mostrando los porcentajes de desviacion.
+        </p>
+      </div>
+    </div>
+
+    <div class="info-footer">
+      <p>Desarrollado como herramienta educativa de fisica moderna &middot; Basado en el experimento clasico de 1909</p>
+    </div>
+  </div>
+
+  <!-- PAGINA DEL SIMULADOR -->
+  <div id="simulatorPage" class="hidden">
+    <div class="sim-topnav">
+      <button class="btn-back" onclick="showInfo()">
+        &larr; Volver al proyecto
+      </button>
+      <span class="sim-nav-title">Simulador de Rutherford</span>
+    </div>
+
+    <main class="app">
+      <section class="stage">
+        <div class="topbar">
+          <div>
+            <p class="eyebrow">Fisica</p>
+            <h1>Experimento de dispersion de Rutherford</h1>
+            <p class="subtitle">Simulacion basada en la lamina de oro, la fuente alfa y la pantalla detectora del experimento clasico.</p>
+          </div>
+          <div class="status">
+            <span id="stateDot" class="dot"></span>
+            <span id="stateText">Simulando</span>
+          </div>
+        </div>
+
+        <div class="canvasShell">
+          <canvas id="simulation" aria-label="Simulacion de particulas alfa desviadas por una lamina delgada de oro"></canvas>
+          <div class="legend">
+            <span><i class="alpha"></i> particulas alfa</span>
+            <span><i class="nucleus"></i> nucleo positivo</span>
+            <span><i class="foil"></i> lamina de oro</span>
+          </div>
+        </div>
+
+        <label class="control stageControl">
+          <span>Rotacion de la lamina</span>
+          <output id="foilAngleValue">26 grados</output>
+          <input id="foilAngleSlider" type="range" min="-60" max="60" value="26">
+        </label>
+      </section>
+
+      <aside class="panel">
+        <div class="panelHeader">
+          <h2>Controles</h2>
+          <button id="toggleRun" type="button">Pausar</button>
+        </div>
+
+        <label class="control">
+          <span>Carga nuclear Z</span>
+          <output id="zValue">79</output>
+          <input id="zSlider" type="range" min="20" max="100" value="79">
+        </label>
+
+        <label class="control">
+          <span>Energia alfa</span>
+          <output id="energyValue">6.0 MeV</output>
+          <input id="energySlider" type="range" min="2" max="10" value="6" step="0.1">
+        </label>
+
+        <label class="control">
+          <span>Apertura del haz</span>
+          <output id="spreadValue">52 px</output>
+          <input id="spreadSlider" type="range" min="10" max="120" value="52">
+        </label>
+
+        <label class="control">
+          <span>Intensidad</span>
+          <output id="rateValue">7/s</output>
+          <input id="rateSlider" type="range" min="1" max="18" value="7">
+        </label>
+
+        <div class="actions">
+          <button id="resetStats" type="button">Reiniciar datos</button>
+          <button id="presetGold" type="button">Oro Z=79</button>
+        </div>
+
+        <section class="metrics" aria-label="Resultados de la simulacion">
+          <article>
+            <strong id="totalCount">0</strong>
+            <span>particulas emitidas</span>
+          </article>
+          <article>
+            <strong id="smallAngle">0%</strong>
+            <span>desviacion menor a 10 grados</span>
+          </article>
+          <article>
+            <strong id="largeAngle">0%</strong>
+            <span>desviacion mayor a 45 grados</span>
+          </article>
+          <article>
+            <strong id="backAngle">0%</strong>
+            <span>retrodispersion</span>
+          </article>
+        </section>
+      </aside>
+
+    </main>
+  </div>
+
+  <script>
+const canvas = document.getElementById("simulation");
+const ctx = canvas.getContext("2d");
+
+const controls = {
+  z: document.getElementById("zSlider"),
+  energy: document.getElementById("energySlider"),
+  spread: document.getElementById("spreadSlider"),
+  rate: document.getElementById("rateSlider"),
+  foilAngle: document.getElementById("foilAngleSlider"),
+};
+
+const labels = {
+  z: document.getElementById("zValue"),
+  energy: document.getElementById("energyValue"),
+  spread: document.getElementById("spreadValue"),
+  rate: document.getElementById("rateValue"),
+  foilAngle: document.getElementById("foilAngleValue"),
+  total: document.getElementById("totalCount"),
+  small: document.getElementById("smallAngle"),
+  large: document.getElementById("largeAngle"),
+  back: document.getElementById("backAngle"),
+  stateDot: document.getElementById("stateDot"),
+  stateText: document.getElementById("stateText"),
+};
+
+const toggleRun = document.getElementById("toggleRun");
+const resetStats = document.getElementById("resetStats");
+const presetGold = document.getElementById("presetGold");
+
+let particles = [];
+let animationId = 0;
+let lastTime = performance.now();
+let spawnAccumulator = 0;
+let running = true;
+
+const pathColors = {
+  straight: "#33d6c7",
+  deflected: "#f4be4f",
+  back: "#ff6f61",
+};
+
+const stats = {
+  total: 0,
+  recorded: 0,
+  small: 0,
+  large: 0,
+  back: 0,
+};
+
+function sizeCanvas() {
+  const rect = canvas.getBoundingClientRect();
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width = Math.max(1, Math.floor(rect.width * ratio));
+  canvas.height = Math.max(1, Math.floor(rect.height * ratio));
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+}
+
+function simBounds() {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    width: rect.width,
+    height: rect.height,
+    nucleusX: rect.width * 0.55,
+    nucleusY: rect.height * 0.5,
+    foilX: rect.width * 0.55,
+  };
+}
+
+function randomNormal() {
+  const u = 1 - Math.random();
+  const v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+function spawnParticle() {
+  const b = simBounds();
+  const spread = Number(controls.spread.value);
+  const energy = Number(controls.energy.value);
+  const y = b.nucleusY + randomNormal() * spread;
+  const speed = 110 + energy * 32;
+
+  particles.push({
+    x: -22,
+    y,
+    vx: speed,
+    vy: 0,
+    trail: [],
+    entered: false,
+    bounced: false,
+    finished: false,
+    color: pathColors.straight,
+    result: "straight",
+  });
+
+  stats.total += 1;
+}
+
+function updateParticle(p, dt) {
+  const b = simBounds();
+  const z = Number(controls.z.value);
+  const energy = Number(controls.energy.value);
+  const dx = p.x - b.nucleusX;
+  const dy = p.y - b.nucleusY;
+  const r2 = Math.max(dx * dx + dy * dy, 90);
+  const r = Math.sqrt(r2);
+  const force = (z * 42000) / (energy * r2);
+  const ax = (dx / r) * force;
+  const ay = (dy / r) * force;
+
+  p.vx += ax * dt;
+  p.vy += ay * dt;
+
+  const closeLimit = 15 + (z / energy) * 0.75;
+  if (p.entered && !p.bounced && r < closeLimit && p.x <= b.foilX + 24) {
+    const speed = Math.hypot(p.vx, p.vy);
+    const verticalKick = Math.sign(dy || randomNormal()) * speed * 0.45;
+    p.vx = -Math.max(130, speed * 0.82);
+    p.vy = verticalKick;
+    p.bounced = true;
+    p.result = "deflected";
+    p.color = pathColors.deflected;
+  }
+
+  p.x += p.vx * dt;
+  p.y += p.vy * dt;
+  p.trail.push({ x: p.x, y: p.y });
+
+  if (p.trail.length > 54) {
+    p.trail.shift();
+  }
+
+  if (p.x > b.foilX - 6 && !p.entered) {
+    p.entered = true;
+    p.result = classifyAtFoil(p, b);
+    p.color = pathColors[p.result];
+    bendByFoilAngle(p);
+  }
+
+  if (p.entered && p.vx < 0) {
+    p.result = "back";
+    p.color = pathColors.back;
+  }
+
+  const outside = p.x > b.width + 40 || p.x < -70 || p.y < -70 || p.y > b.height + 70;
+  if (outside && !p.finished && p.entered) {
+    const angle = Math.abs(Math.atan2(p.vy, p.vx) * 180 / Math.PI);
+    stats.recorded += 1;
+    if (angle < 10) stats.small += 1;
+    if (angle > 45) stats.large += 1;
+    if (p.vx < 0) stats.back += 1;
+    p.finished = true;
+  }
+
+  return !outside;
+}
+
+function classifyAtFoil(p, b) {
+  const z = Number(controls.z.value);
+  const energy = Number(controls.energy.value);
+  const impactDistance = Math.abs(p.y - b.nucleusY);
+  const influence = z / energy;
+  const deflectedLimit = 18 + influence * 2.3;
+
+  if (impactDistance < deflectedLimit) return "deflected";
+  return "straight";
+}
+
+function bendByFoilAngle(p) {
+  if (p.result === "straight") return;
+
+  const angle = toRadians(Number(controls.foilAngle.value));
+  const speed = Math.hypot(p.vx, p.vy);
+  const direction = Math.sign(p.y - simBounds().nucleusY || 1);
+  const rotationKick = Math.sin(angle) * speed * 0.42;
+  const nucleusKick = direction * speed * 0.22;
+
+  p.vy += rotationKick + nucleusKick;
+}
+
+function drawGrid(b) {
+  ctx.fillStyle = "#080b0f";
+  ctx.fillRect(0, 0, b.width, b.height);
+
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.055)";
+  ctx.lineWidth = 1;
+  for (let x = 0; x < b.width; x += 42) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, b.height);
+    ctx.stroke();
+  }
+  for (let y = 0; y < b.height; y += 42) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(b.width, y);
+    ctx.stroke();
+  }
+}
+
+function drawFoil(b) {
+  const foilHeight = Math.min(b.height * 0.36, 190);
+  const y0 = b.nucleusY - foilHeight / 2;
+
+  ctx.save();
+  ctx.translate(b.foilX, b.nucleusY);
+  ctx.rotate(toRadians(Number(controls.foilAngle.value)));
+  const gradient = ctx.createLinearGradient(-34, -foilHeight / 2, 34, foilHeight / 2);
+  gradient.addColorStop(0, "#ffdf74");
+  gradient.addColorStop(0.52, "#f4be4f");
+  gradient.addColorStop(1, "#9f6f13");
+  ctx.fillStyle = gradient;
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
+  ctx.lineWidth = 1.5;
+  ctx.fillRect(-34, -foilHeight / 2, 68, foilHeight);
+  ctx.strokeRect(-34, -foilHeight / 2, 68, foilHeight);
+  ctx.restore();
+
+  labelText("Lamina de oro", b.foilX + 42, y0 - 16, "left");
+}
+
+function toRadians(degrees) {
+  return degrees * Math.PI / 180;
+}
+
+function drawNucleus(b) {
+  const z = Number(controls.z.value);
+  const radius = 13 + (z - 20) * 0.08;
+
+  const glow = ctx.createRadialGradient(b.nucleusX, b.nucleusY, 0, b.nucleusX, b.nucleusY, radius * 5);
+  glow.addColorStop(0, "rgba(255, 111, 97, 0.45)");
+  glow.addColorStop(1, "rgba(255, 111, 97, 0)");
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(b.nucleusX, b.nucleusY, radius * 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#ff6f61";
+  ctx.beginPath();
+  ctx.arc(b.nucleusX, b.nucleusY, radius, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "700 14px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("+", b.nucleusX, b.nucleusY);
+}
+
+function drawSource(b) {
+  const x = 26;
+  const y = b.nucleusY - 36;
+  const cubeGradient = ctx.createLinearGradient(x, y, x + 64, y + 72);
+  cubeGradient.addColorStop(0, "#fff2a8");
+  cubeGradient.addColorStop(0.55, "#f4be4f");
+  cubeGradient.addColorStop(1, "#8a6618");
+
+  ctx.fillStyle = cubeGradient;
+  ctx.fillRect(x, y, 62, 72);
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.42)";
+  ctx.strokeRect(x, y, 62, 72);
+
+  ctx.fillStyle = "rgba(255, 111, 97, 0.55)";
+  ctx.beginPath();
+  ctx.arc(x + 44, b.nucleusY, 13, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(255, 0, 145, 0.72)";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(x + 56, b.nucleusY);
+  ctx.lineTo(b.foilX - 40, b.nucleusY);
+  ctx.stroke();
+
+  labelText("Fuente de particulas positivas", x + 2, y - 14, "left");
+}
+
+function drawParticles() {
+  particles.forEach((p) => {
+    if (p.trail.length > 1) {
+      ctx.beginPath();
+      p.trail.forEach((point, index) => {
+        if (index === 0) ctx.moveTo(point.x, point.y);
+        else ctx.lineTo(point.x, point.y);
+      });
+      ctx.strokeStyle = trailColor(p.result);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3.7, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+function trailColor(result) {
+  if (result === "back") return "rgba(255, 111, 97, 0.46)";
+  if (result === "deflected") return "rgba(244, 190, 79, 0.46)";
+  return "rgba(51, 214, 199, 0.38)";
+}
+
+function drawDetector(b) {
+  const centerX = b.nucleusX;
+  const centerY = b.nucleusY;
+  const radius = Math.min(b.width, b.height) * 0.43;
+
+  ctx.strokeStyle = "rgba(244, 190, 79, 0.9)";
+  ctx.lineWidth = 16;
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius, -Math.PI * 0.88, Math.PI * 0.88);
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.32)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius + 10, -Math.PI * 0.88, Math.PI * 0.88);
+  ctx.stroke();
+
+  labelText("Detector de particulas", centerX + radius * 0.06, centerY - radius - 20, "center");
+}
+
+function drawReferencePaths(b) {
+  const startX = 88;
+  const hitX = b.foilX - 8;
+
+  drawArrow(startX, b.nucleusY - 28, hitX, b.nucleusY - 10, "rgba(255, 0, 145, 0.42)");
+  drawArrow(hitX, b.nucleusY - 10, b.width - 86, b.nucleusY - 38, "rgba(51, 214, 199, 0.5)");
+  labelText("Atraviesan sin cambiar de direccion", b.width - 270, b.nucleusY - 72, "left");
+
+  drawArrow(startX, b.nucleusY + 8, hitX, b.nucleusY + 8, "rgba(255, 0, 145, 0.38)");
+  drawArrow(hitX, b.nucleusY + 8, b.width - 120, b.nucleusY + 110, "rgba(244, 190, 79, 0.58)");
+  labelText("Se desvian", b.width - 180, b.nucleusY + 92, "left");
+
+  drawArrow(startX, b.nucleusY + 34, hitX, b.nucleusY + 22, "rgba(255, 0, 145, 0.36)");
+  drawArrow(hitX, b.nucleusY + 22, startX + 62, b.nucleusY + 118, "rgba(255, 111, 97, 0.62)");
+  labelText("Rebotan", startX + 82, b.nucleusY + 124, "left");
+}
+
+function drawArrow(x1, y1, x2, y2, color) {
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - 12 * Math.cos(angle - Math.PI / 6), y2 - 12 * Math.sin(angle - Math.PI / 6));
+  ctx.lineTo(x2 - 12 * Math.cos(angle + Math.PI / 6), y2 - 12 * Math.sin(angle + Math.PI / 6));
+  ctx.closePath();
+  ctx.fill();
+}
+
+function labelText(text, x, y, align = "left") {
+  ctx.save();
+  ctx.font = "700 12px Arial";
+  ctx.textAlign = align;
+  ctx.textBaseline = "middle";
+  const metrics = ctx.measureText(text);
+  const width = metrics.width + 12;
+  const left = align === "center" ? x - width / 2 : align === "right" ? x - width : x;
+  ctx.fillStyle = "rgba(8, 11, 15, 0.72)";
+  ctx.fillRect(left - 2, y - 11, width + 4, 22);
+  ctx.fillStyle = "#e8eef3";
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+function updateLabels() {
+  labels.z.textContent = controls.z.value;
+  labels.energy.textContent = `${Number(controls.energy.value).toFixed(1)} MeV`;
+  labels.spread.textContent = `${controls.spread.value} px`;
+  labels.rate.textContent = `${controls.rate.value}/s`;
+  labels.foilAngle.textContent = `${controls.foilAngle.value} grados`;
+
+  labels.total.textContent = String(stats.total);
+  const divisor = Math.max(1, stats.recorded);
+  labels.small.textContent = `${Math.round(stats.small / divisor * 100)}%`;
+  labels.large.textContent = `${Math.round(stats.large / divisor * 100)}%`;
+  labels.back.textContent = `${Math.round(stats.back / divisor * 100)}%`;
+}
+
+function resetData() {
+  particles = [];
+  stats.total = 0;
+  stats.recorded = 0;
+  stats.small = 0;
+  stats.large = 0;
+  stats.back = 0;
+  updateLabels();
+}
+
+function frame(now) {
+  const delta = Math.min(0.032, (now - lastTime) / 1000);
+  lastTime = now;
+  const b = simBounds();
+
+  if (running) {
+    spawnAccumulator += delta * Number(controls.rate.value);
+    while (spawnAccumulator >= 1) {
+      spawnParticle();
+      spawnAccumulator -= 1;
+    }
+
+    particles = particles.filter((particle) => updateParticle(particle, delta));
+  }
+
+  drawGrid(b);
+  drawDetector(b);
+  drawSource(b);
+  drawReferencePaths(b);
+  drawFoil(b);
+  drawNucleus(b);
+  drawParticles();
+  updateLabels();
+
+  animationId = requestAnimationFrame(frame);
+}
+
+Object.values(controls).forEach((input) => {
+  input.addEventListener("input", updateLabels);
+});
+
+toggleRun.addEventListener("click", () => {
+  running = !running;
+  toggleRun.textContent = running ? "Pausar" : "Continuar";
+  labels.stateText.textContent = running ? "Simulando" : "Pausado";
+  labels.stateDot.classList.toggle("paused", !running);
+});
+
+resetStats.addEventListener("click", resetData);
+
+presetGold.addEventListener("click", () => {
+  controls.z.value = 79;
+  controls.energy.value = 6;
+  controls.spread.value = 52;
+  controls.rate.value = 7;
+  controls.foilAngle.value = 26;
+  resetData();
+});
+
+window.addEventListener("resize", sizeCanvas);
+
+sizeCanvas();
+updateLabels();
+animationId = requestAnimationFrame(frame);
+
+</script>
+  <script>
+    function showSimulator() {
+      document.getElementById('infoPage').classList.add('hidden');
+      document.getElementById('simulatorPage').classList.remove('hidden');
+      if (typeof sizeCanvas === 'function') sizeCanvas();
+    }
+    function showInfo() {
+      document.getElementById('simulatorPage').classList.add('hidden');
+      document.getElementById('infoPage').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
